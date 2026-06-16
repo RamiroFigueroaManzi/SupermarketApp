@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import OrderCard from "@/components/cliente/OrderCard";
-import AutoRefresh from "@/components/AutoRefresh";
+import ClienteSocketRefresher from "@/components/cliente/ClienteSocketRefresher";
 
 const getActiveOrders = unstable_cache(
   async (userId: string) => {
@@ -33,7 +33,7 @@ export default async function ClienteHomePage() {
 
   return (
     <div className="space-y-6">
-      <AutoRefresh />
+      <ClienteSocketRefresher userId={session!.user.id} />
       <div>
         <h1 className="text-xl font-semibold">Hola, {firstName}</h1>
         <p className="text-sm text-[var(--muted-foreground)] mt-0.5">¿Qué necesitás hoy?</p>
