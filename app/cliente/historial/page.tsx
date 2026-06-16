@@ -17,7 +17,7 @@ export default async function ClienteHistorialPage() {
 
   return (
     <div className="space-y-6">
-      <div>
+      <div className="text-center">
         <h1 className="text-xl font-semibold">Historial de pedidos</h1>
         <p className="text-sm text-[var(--muted-foreground)] mt-0.5">
           {orders.length} pedido{orders.length !== 1 ? "s" : ""} completado{orders.length !== 1 ? "s" : ""}
