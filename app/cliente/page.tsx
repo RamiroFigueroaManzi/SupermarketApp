@@ -34,7 +34,7 @@ export default async function ClienteHomePage() {
   return (
     <div className="space-y-6">
       <ClienteSocketRefresher userId={session!.user.id} />
-      <div>
+      <div className="text-center">
         <h1 className="text-xl font-semibold">Hola, {firstName}</h1>
         <p className="text-sm text-[var(--muted-foreground)] mt-0.5">¿Qué necesitás hoy?</p>
       </div>
