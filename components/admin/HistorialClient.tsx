@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Download, Search, Clock, Package, ClipboardList } from "lucide-react";
+import { Download, Search, Clock, Package, ClipboardList, Timer } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import Papa from "papaparse";
 
@@ -17,8 +17,20 @@ interface PedidoHistorial {
   id: string; clienteNombre: string; operadorNombre: string;
   totalAmount: string; cantidadItems: number;
   confirmedAt: string | null; completedAt: string | null;
-  tiempoEsperaMinutos: number | null;
-  tiempoPreparacionMinutos: number | null;
+  tiempoEsperaSegundos: number | null;
+  tiempoPreparacionSegundos: number | null;
+  tiempoTotalSegundos: number | null;
+}
+
+function formatMMSS(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
+
+function avgSegundos(pedidos: PedidoHistorial[], key: keyof PedidoHistorial): number | null {
+  const vals = pedidos.map((p) => p[key] as number | null).filter((v): v is number => v != null);
+  return vals.length ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : null;
 }
 
 const today = new Date().toISOString().slice(0, 10);
@@ -58,9 +70,10 @@ export default function HistorialClient({ empleados }: { empleados: { id: string
       "Total (ARS)": p.totalAmount,
       Productos: p.cantidadItems,
       "Hora llegada": p.confirmedAt ? formatDate(p.confirmedAt) : "—",
-      "Espera en RECIBIDO (min)": p.tiempoEsperaMinutos ?? "—",
+      "Espera en RECIBIDO (mm:ss)": p.tiempoEsperaSegundos != null ? formatMMSS(p.tiempoEsperaSegundos) : "—",
       Completado: p.completedAt ? formatDate(p.completedAt) : "—",
-      "Tiempo preparación (min)": p.tiempoPreparacionMinutos ?? "—",
+      "Tiempo preparación (mm:ss)": p.tiempoPreparacionSegundos != null ? formatMMSS(p.tiempoPreparacionSegundos) : "—",
+      "Tiempo total (mm:ss)": p.tiempoTotalSegundos != null ? formatMMSS(p.tiempoTotalSegundos) : "—",
     })));
     const a = Object.assign(document.createElement("a"), {
       href: URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8;" })),
@@ -70,9 +83,8 @@ export default function HistorialClient({ empleados }: { empleados: { id: string
   };
 
   const totalMonto = pedidos.reduce((sum, p) => sum + parseFloat(p.totalAmount), 0);
-  const avgTiempo = pedidos.filter(p => p.tiempoPreparacionMinutos != null).length
-    ? Math.round(pedidos.filter(p => p.tiempoPreparacionMinutos != null).reduce((s, p) => s + p.tiempoPreparacionMinutos!, 0) / pedidos.filter(p => p.tiempoPreparacionMinutos != null).length)
-    : null;
+  const avgEsperaTotal = avgSegundos(pedidos, "tiempoTotalSegundos");
+  const avgPreparacion = avgSegundos(pedidos, "tiempoPreparacionSegundos");
 
   return (
     <div className="space-y-6">
@@ -132,23 +144,35 @@ export default function HistorialClient({ empleados }: { empleados: { id: string
 
       {/* KPIs del resultado */}
       {!loading && pedidos.length > 0 && (
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-4 gap-4">
           <Card className="border-[var(--border)]">
             <CardContent className="p-4 flex items-center gap-3">
-              <ClipboardList className="h-8 w-8 text-blue-500 bg-blue-50 p-1.5 rounded-lg" />
+              <ClipboardList className="h-8 w-8 text-blue-500 bg-blue-50 p-1.5 rounded-lg shrink-0" />
               <div><p className="text-xl font-bold">{pedidos.length}</p><p className="text-xs text-[var(--muted-foreground)]">Pedidos en el filtro</p></div>
             </CardContent>
           </Card>
           <Card className="border-[var(--border)]">
             <CardContent className="p-4 flex items-center gap-3">
-              <Package className="h-8 w-8 text-green-500 bg-green-50 p-1.5 rounded-lg" />
+              <Package className="h-8 w-8 text-green-500 bg-green-50 p-1.5 rounded-lg shrink-0" />
               <div><p className="text-xl font-bold text-[var(--primary)]">{formatCurrency(totalMonto)}</p><p className="text-xs text-[var(--muted-foreground)]">Monto total</p></div>
             </CardContent>
           </Card>
           <Card className="border-[var(--border)]">
             <CardContent className="p-4 flex items-center gap-3">
-              <Clock className="h-8 w-8 text-orange-500 bg-orange-50 p-1.5 rounded-lg" />
-              <div><p className="text-xl font-bold">{avgTiempo != null ? `${avgTiempo} min` : "—"}</p><p className="text-xs text-[var(--muted-foreground)]">Tiempo promedio</p></div>
+              <Clock className="h-8 w-8 text-orange-500 bg-orange-50 p-1.5 rounded-lg shrink-0" />
+              <div>
+                <p className="text-xl font-bold font-mono">{avgEsperaTotal != null ? formatMMSS(avgEsperaTotal) : "—"}</p>
+                <p className="text-xs text-[var(--muted-foreground)]">Promedio espera total</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="border-[var(--border)]">
+            <CardContent className="p-4 flex items-center gap-3">
+              <Timer className="h-8 w-8 text-purple-500 bg-purple-50 p-1.5 rounded-lg shrink-0" />
+              <div>
+                <p className="text-xl font-bold font-mono">{avgPreparacion != null ? formatMMSS(avgPreparacion) : "—"}</p>
+                <p className="text-xs text-[var(--muted-foreground)]">Promedio preparación</p>
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -192,9 +216,9 @@ export default function HistorialClient({ empleados }: { empleados: { id: string
                       {p.confirmedAt ? formatDate(p.confirmedAt) : "—"}
                     </TableCell>
                     <TableCell className="text-center">
-                      {p.tiempoEsperaMinutos != null
-                        ? <span className={`inline-flex items-center gap-1 text-sm font-medium ${p.tiempoEsperaMinutos > 10 ? "text-red-600" : p.tiempoEsperaMinutos > 5 ? "text-orange-500" : "text-green-600"}`}>
-                            <Clock className="h-3 w-3" />{p.tiempoEsperaMinutos} min
+                      {p.tiempoEsperaSegundos != null
+                        ? <span className={`inline-flex items-center gap-1 text-sm font-medium font-mono ${p.tiempoEsperaSegundos > 600 ? "text-red-600" : p.tiempoEsperaSegundos > 300 ? "text-orange-500" : "text-green-600"}`}>
+                            <Clock className="h-3 w-3" />{formatMMSS(p.tiempoEsperaSegundos)}
                           </span>
                         : <span className="text-[var(--muted-foreground)]">—</span>}
                     </TableCell>
@@ -202,8 +226,8 @@ export default function HistorialClient({ empleados }: { empleados: { id: string
                       {p.completedAt ? formatDate(p.completedAt) : "—"}
                     </TableCell>
                     <TableCell className="text-right pr-4">
-                      {p.tiempoPreparacionMinutos != null
-                        ? <span className="flex items-center justify-end gap-1 text-sm"><Clock className="h-3 w-3 text-[var(--muted-foreground)]" />{p.tiempoPreparacionMinutos} min</span>
+                      {p.tiempoPreparacionSegundos != null
+                        ? <span className="flex items-center justify-end gap-1 text-sm font-mono"><Clock className="h-3 w-3 text-[var(--muted-foreground)]" />{formatMMSS(p.tiempoPreparacionSegundos)}</span>
                         : <span className="text-[var(--muted-foreground)]">—</span>}
                     </TableCell>
                   </TableRow>

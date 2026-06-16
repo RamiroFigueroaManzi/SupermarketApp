@@ -59,14 +59,19 @@ export async function GET(req: NextRequest) {
     const startedAt = o.statusHistory.find((h) => h.toStatus === "EN_PREPARACION")?.createdAt;
     const completedAt = o.statusHistory.find((h) => h.toStatus === "LISTO")?.createdAt;
 
-    const tiempoEspera =
+    const tiempoEsperaSegundos =
       confirmedAt && startedAt
-        ? Math.round((startedAt.getTime() - confirmedAt.getTime()) / 60000)
+        ? Math.round((startedAt.getTime() - confirmedAt.getTime()) / 1000)
         : null;
 
-    const tiempoPreparacion =
+    const tiempoPreparacionSegundos =
       startedAt && completedAt
-        ? Math.round((completedAt.getTime() - startedAt.getTime()) / 60000)
+        ? Math.round((completedAt.getTime() - startedAt.getTime()) / 1000)
+        : null;
+
+    const tiempoTotalSegundos =
+      confirmedAt && completedAt
+        ? Math.round((completedAt.getTime() - confirmedAt.getTime()) / 1000)
         : null;
 
     return {
@@ -78,8 +83,9 @@ export async function GET(req: NextRequest) {
       cantidadItems: o.items.length,
       confirmedAt: confirmedAt?.toISOString() ?? null,
       completedAt: completedAt?.toISOString() ?? null,
-      tiempoEsperaMinutos: tiempoEspera,
-      tiempoPreparacionMinutos: tiempoPreparacion,
+      tiempoEsperaSegundos,
+      tiempoPreparacionSegundos,
+      tiempoTotalSegundos,
     };
   });
 
