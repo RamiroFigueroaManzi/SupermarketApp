@@ -46,7 +46,7 @@ export default function OrderDetailClient({ order, userId }: Props) {
 
     const socket = io({
       path: "/api/socket",
-      transports: ["websocket"],
+      transports: ["websocket", "polling"],
       auth: { userId, role: "cliente" },
     });
 

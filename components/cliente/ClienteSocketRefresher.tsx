@@ -12,7 +12,7 @@ export default function ClienteSocketRefresher({ userId }: { userId: string }) {
 
     const socket = io({
       path: "/api/socket",
-      transports: ["websocket"],
+      transports: ["websocket", "polling"],
       auth: { userId, role: "cliente" },
     });
 

@@ -8,11 +8,13 @@ const g = globalThis as unknown as { __socketIO?: SocketServer };
 export function initSocket(httpServer: HTTPServer): SocketServer {
   if (g.__socketIO) return g.__socketIO;
 
+  const allowedOrigin = (process.env.NEXTAUTH_URL || "http://localhost:3000").replace(/\/$/, "");
+
   g.__socketIO = new SocketServer(httpServer, {
     path: "/api/socket",
     transports: ["websocket", "polling"],
     cors: {
-      origin: process.env.NEXTAUTH_URL || "http://localhost:3000",
+      origin: [allowedOrigin, "http://localhost:3000"],
       credentials: true,
     },
   });

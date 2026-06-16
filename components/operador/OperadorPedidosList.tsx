@@ -39,7 +39,7 @@ export default function OperadorPedidosList({ pedidos: initialPedidos, misActivo
   useEffect(() => {
     const socket = io({
       path: "/api/socket",
-      transports: ["websocket"],
+      transports: ["websocket", "polling"],
       auth: { userId: operadorId, role: "OPERADOR" },
     });
     socket.on("pedidos:lista_actualizada", () => { router.refresh(); });
