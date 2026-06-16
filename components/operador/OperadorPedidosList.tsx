@@ -37,13 +37,20 @@ export default function OperadorPedidosList({ pedidos: initialPedidos, misActivo
   const [misActivos, setMisActivos] = useState(initialActivos);
 
   useEffect(() => {
+    // Polling de fallback: refresca cada 8s aunque el socket falle
+    const interval = setInterval(() => { router.refresh(); }, 8000);
+
     const socket = io({
       path: "/api/socket",
       transports: ["websocket", "polling"],
       auth: { userId: operadorId, role: "OPERADOR" },
     });
     socket.on("pedidos:lista_actualizada", () => { router.refresh(); });
-    return () => { socket.disconnect(); };
+
+    return () => {
+      clearInterval(interval);
+      socket.disconnect();
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [operadorId]);
 

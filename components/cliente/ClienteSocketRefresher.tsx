@@ -10,6 +10,9 @@ export default function ClienteSocketRefresher({ userId }: { userId: string }) {
   useEffect(() => {
     router.refresh();
 
+    // Polling de fallback: refresca cada 8s aunque el socket falle
+    const interval = setInterval(() => { router.refresh(); }, 8000);
+
     const socket = io({
       path: "/api/socket",
       transports: ["websocket", "polling"],
@@ -24,7 +27,10 @@ export default function ClienteSocketRefresher({ userId }: { userId: string }) {
       router.refresh();
     });
 
-    return () => { socket.disconnect(); };
+    return () => {
+      clearInterval(interval);
+      socket.disconnect();
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
