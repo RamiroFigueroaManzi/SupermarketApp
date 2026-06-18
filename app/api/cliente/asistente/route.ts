@@ -5,11 +5,6 @@ import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@supabase/supabase-js";
 import { generateEmbedding } from "@/lib/embeddings";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
 const anthropic = new Anthropic();
 
 interface RecipeRow {
@@ -42,14 +37,14 @@ export async function POST(req: NextRequest) {
   }
 
   // 2. Vector similarity search via Supabase RPC (bypasses pgbouncer)
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
   const { data: recipes, error: rpcError } = await supabase.rpc("match_recipes", {
     query_embedding: `[${embedding.join(",")}]`,
     match_count: 5,
   });
-
-  console.log("[asistente] RPC error:", rpcError);
-  console.log("[asistente] RPC data length:", recipes?.length ?? "null");
-  console.log("[asistente] RPC first result:", recipes?.[0]?.name ?? "none");
 
   if (rpcError) {
     return NextResponse.json({ error: `Error RPC: ${rpcError.message}` }, { status: 500 });
