@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -38,6 +38,16 @@ export default function NuevoPedidoForm() {
   const [items, setItems] = useState<AIItem[]>([]);
   const [showSearch, setShowSearch] = useState(false);
   const [confirming, setConfirming] = useState(false);
+
+  useEffect(() => {
+    const prefill = sessionStorage.getItem("pedido_prefill");
+    if (prefill) {
+      sessionStorage.removeItem("pedido_prefill");
+      try {
+        setItems(JSON.parse(prefill));
+      } catch { /* ignore */ }
+    }
+  }, []);
 
   const total = items
     .filter((i) => i.productoId && i.precio)

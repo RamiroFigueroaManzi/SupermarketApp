@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Clock } from "lucide-react";
 import { formatCurrency, formatRelativeTime } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { OrderStatus } from "@prisma/client";
+import { calcRetiroEstimado } from "@/lib/tiempos";
 
 const STATUS_CONFIG: Record<OrderStatus, { label: string; className: string }> = {
   BORRADOR: { label: "Borrador", className: "bg-gray-100 text-gray-600" },
@@ -23,12 +24,18 @@ interface Props {
     totalAmount: string;
     cantidadItems: number;
     updatedAt: string;
+    confirmedAt?: string | null;
   };
+  avgTiempoSegundos?: number | null;
 }
 
-export default function OrderCard({ order }: Props) {
+export default function OrderCard({ order, avgTiempoSegundos }: Props) {
   const config = STATUS_CONFIG[order.status];
   const isListo = order.status === "LISTO";
+  const showRetiro =
+    avgTiempoSegundos != null &&
+    order.confirmedAt != null &&
+    (order.status === "RECIBIDO" || order.status === "EN_PREPARACION");
 
   return (
     <Link href={`/cliente/pedido/${order.id}`}>
@@ -53,6 +60,12 @@ export default function OrderCard({ order }: Props) {
             <p className="text-xs text-[var(--muted-foreground)] mt-0.5">
               {formatRelativeTime(order.updatedAt)}
             </p>
+            {showRetiro && (
+              <p className="text-xs text-blue-600 mt-1 flex items-center gap-1 font-medium">
+                <Clock className="h-3 w-3 shrink-0" />
+                Retiro estimado: {calcRetiroEstimado(order.confirmedAt!, avgTiempoSegundos!)}
+              </p>
+            )}
           </div>
           <ChevronRight className="h-4 w-4 text-[var(--muted-foreground)] shrink-0" />
         </CardContent>

@@ -8,11 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Package, ShoppingBasket } from "lucide-react";
+import { ArrowLeft, Clock, Package, ShoppingBasket } from "lucide-react";
 import Image from "next/image";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { OrderStatus } from "@prisma/client";
 import { toast } from "sonner";
+import { calcRetiroEstimado } from "@/lib/tiempos";
 
 const STATUS_STEPS: OrderStatus[] = ["RECIBIDO", "EN_PREPARACION", "LISTO", "TERMINADO"];
 const STATUS_LABELS: Record<string, string> = {
@@ -27,6 +28,7 @@ interface OrderData {
   status: OrderStatus;
   totalAmount: string;
   createdAt: string;
+  confirmedAt: string | null;
   items: { id: string; productName: string; unitPrice: string; quantity: number; categoryName: string | null; imageUrl: string | null }[];
   statusHistory: { fromStatus: string | null; toStatus: string; createdAt: string }[];
 }
@@ -34,12 +36,18 @@ interface OrderData {
 interface Props {
   order: OrderData;
   userId: string;
+  avgTiempoSegundos?: number | null;
 }
 
-export default function OrderDetailClient({ order, userId }: Props) {
+export default function OrderDetailClient({ order, userId, avgTiempoSegundos }: Props) {
   const router = useRouter();
   const currentStepIdx = STATUS_STEPS.indexOf(order.status);
   const progress = order.status === "TERMINADO" ? 100 : ((currentStepIdx + 1) / STATUS_STEPS.length) * 100;
+
+  const showRetiro =
+    avgTiempoSegundos != null &&
+    order.confirmedAt != null &&
+    (order.status === "RECIBIDO" || order.status === "EN_PREPARACION");
 
   useEffect(() => {
     if (order.status === "TERMINADO") return;
@@ -96,6 +104,12 @@ export default function OrderDetailClient({ order, userId }: Props) {
                 </div>
               ))}
             </div>
+            {showRetiro && (
+              <div className="flex items-center justify-center gap-1.5 text-sm text-blue-700 bg-blue-50 rounded-lg p-2.5 font-medium">
+                <Clock className="h-4 w-4 shrink-0" />
+                Retiro estimado: {calcRetiroEstimado(order.confirmedAt!, avgTiempoSegundos!)}
+              </div>
+            )}
             {order.status === "LISTO" && (
               <p className="text-center text-sm font-medium text-green-700 bg-green-50 rounded-lg p-2">
                 ¡Tu pedido está listo para retirar! 🎉
@@ -113,7 +127,6 @@ export default function OrderDetailClient({ order, userId }: Props) {
         </h2>
         {order.items.map((item) => (
           <div key={item.id} className="flex items-center gap-3 py-2.5 border-b border-[var(--border)] last:border-0">
-            {/* Imagen del producto */}
             <div className="relative h-12 w-12 shrink-0 rounded-xl bg-gray-50 border border-[var(--border)] overflow-hidden flex items-center justify-center">
               {item.imageUrl ? (
                 <Image src={item.imageUrl} alt={item.productName} fill className="object-contain p-1" sizes="48px" unoptimized />

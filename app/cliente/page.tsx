@@ -6,12 +6,20 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import OrderCard from "@/components/cliente/OrderCard";
 import ClienteSocketRefresher from "@/components/cliente/ClienteSocketRefresher";
+import { getAvgTiempoTotalSegundos } from "@/lib/tiempos";
 
 const getActiveOrders = unstable_cache(
   async (userId: string) => {
     const rows = await db.order.findMany({
       where: { userId, status: { notIn: ["BORRADOR", "TERMINADO"] } },
-      include: { items: { select: { id: true } } },
+      include: {
+        items: { select: { id: true } },
+        statusHistory: {
+          where: { toStatus: "RECIBIDO" },
+          orderBy: { createdAt: "asc" },
+          take: 1,
+        },
+      },
       orderBy: { updatedAt: "desc" },
     });
     return rows.map((o) => ({
@@ -20,6 +28,7 @@ const getActiveOrders = unstable_cache(
       totalAmount: o.totalAmount.toString(),
       cantidadItems: o.items.length,
       updatedAt: o.updatedAt.toISOString(),
+      confirmedAt: o.statusHistory[0]?.createdAt.toISOString() ?? null,
     }));
   },
   ["cliente-active-orders"],
@@ -28,7 +37,10 @@ const getActiveOrders = unstable_cache(
 
 export default async function ClienteHomePage() {
   const session = await auth();
-  const orders = await getActiveOrders(session!.user.id);
+  const [orders, avgTiempoSegundos] = await Promise.all([
+    getActiveOrders(session!.user.id),
+    getAvgTiempoTotalSegundos(),
+  ]);
   const firstName = session!.user.name?.split(" ")[0] || "cliente";
 
   return (
@@ -55,6 +67,7 @@ export default async function ClienteHomePage() {
             <OrderCard
               key={order.id}
               order={order}
+              avgTiempoSegundos={avgTiempoSegundos}
             />
           ))}
         </section>

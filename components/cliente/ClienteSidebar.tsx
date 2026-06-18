@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Separator } from "@/components/ui/separator";
-import { ShoppingCart, ClipboardList, LogOut, Menu, Home } from "lucide-react";
+import { ShoppingCart, ClipboardList, LogOut, Menu, Home, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -25,6 +25,7 @@ function SidebarContent({ user, onNavigate }: Props & { onNavigate?: () => void 
   const navItems = [
     { href: "/cliente", label: "Mis pedidos", icon: Home, exact: true },
     { href: "/cliente/historial", label: "Historial", icon: ClipboardList },
+    { href: "/cliente/asistente", label: "Asistente IA", icon: Sparkles },
   ];
 
   return (
