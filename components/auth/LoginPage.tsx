@@ -10,8 +10,15 @@ import { ShoppingCart, Building2 } from "lucide-react";
 export default function LoginPage() {
   const router = useRouter();
 
-  const handleGoogleSignIn = async () => {
-    await signIn("google", { callbackUrl: "/cliente" });
+  const handleGoogleSignIn = () => {
+    // In PWA standalone mode on Android, accounts.google.com gets intercepted by Gmail.
+    // Opening in a new browser tab forces Chrome to handle the OAuth flow correctly.
+    const isPWA = window.matchMedia("(display-mode: standalone)").matches;
+    if (isPWA) {
+      window.open(`/api/auth/signin/google?callbackUrl=${encodeURIComponent("/cliente")}`, "_blank");
+    } else {
+      signIn("google", { callbackUrl: "/cliente" });
+    }
   };
 
   return (
