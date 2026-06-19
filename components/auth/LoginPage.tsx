@@ -11,12 +11,15 @@ export default function LoginPage() {
   const router = useRouter();
 
   const handleGoogleSignIn = () => {
-    // In PWA standalone mode on Android, accounts.google.com gets intercepted by Gmail.
-    // Opening in a new browser tab forces Chrome to handle the OAuth flow correctly.
     const isPWA = window.matchMedia("(display-mode: standalone)").matches;
-    if (isPWA) {
+    const isAndroid = /Android/i.test(navigator.userAgent);
+
+    if (isPWA && isAndroid) {
+      // On Android PWA, accounts.google.com gets intercepted by Gmail.
+      // Force Chrome to open the OAuth flow instead.
       window.open(`/api/auth/signin/google?callbackUrl=${encodeURIComponent("/cliente")}`, "_blank");
     } else {
+      // iOS PWA and regular browser: standard redirect works fine.
       signIn("google", { callbackUrl: "/cliente" });
     }
   };
