@@ -15,16 +15,15 @@ export default async function ResultadoPage({ params, searchParams }: Props) {
   if (!session) redirect("/login");
 
   const { id } = await params;
-  const { status, payment_id } = await searchParams;
+  const { payment_id } = await searchParams;
 
-  // Verify payment with MP and confirm order if approved
-  if (status === "approved" && payment_id) {
+  // If we have a payment_id, try to verify with MP and confirm order
+  if (payment_id) {
     try {
       const mpRes = await fetch(`https://api.mercadopago.com/v1/payments/${payment_id}`, {
         headers: { Authorization: `Bearer ${process.env.MP_ACCESS_TOKEN}` },
         cache: "no-store",
       });
-
       if (mpRes.ok) {
         const payment = await mpRes.json();
         if (payment.status === "approved") {
@@ -53,13 +52,20 @@ export default async function ResultadoPage({ params, searchParams }: Props) {
     }
   }
 
-  const isApproved = status === "approved";
-  const isPending = status === "pending";
-  const isRejected = status === "rejected" || (!isApproved && !isPending);
+  // Trust the DB, not the URL param
+  const order = await db.order.findUnique({
+    where: { id },
+    select: { status: true, paymentStatus: true, userId: true },
+  });
+
+  if (!order || order.userId !== session.user.id) redirect("/cliente");
+
+  const isPagado = order.paymentStatus === "PAGADO" || order.status === "RECIBIDO";
+  const isPending = order.paymentStatus === "PENDIENTE" && order.status === "BORRADOR";
 
   return (
     <div className="max-w-md mx-auto px-4 py-12 flex flex-col items-center text-center space-y-6">
-      {isApproved && (
+      {isPagado && (
         <>
           <div className="h-20 w-20 rounded-full bg-green-100 flex items-center justify-center">
             <CheckCircle2 className="h-10 w-10 text-green-600" />
@@ -90,14 +96,12 @@ export default async function ResultadoPage({ params, searchParams }: Props) {
             </p>
           </div>
           <Link href="/cliente" className="w-full">
-            <Button variant="outline" className="w-full">
-              Volver al inicio
-            </Button>
+            <Button variant="outline" className="w-full">Volver al inicio</Button>
           </Link>
         </>
       )}
 
-      {isRejected && (
+      {!isPagado && !isPending && (
         <>
           <div className="h-20 w-20 rounded-full bg-red-100 flex items-center justify-center">
             <XCircle className="h-10 w-10 text-red-600" />
@@ -115,9 +119,7 @@ export default async function ResultadoPage({ params, searchParams }: Props) {
               </Button>
             </Link>
             <Link href="/cliente" className="w-full">
-              <Button variant="outline" className="w-full">
-                Volver al inicio
-              </Button>
+              <Button variant="outline" className="w-full">Volver al inicio</Button>
             </Link>
           </div>
         </>
