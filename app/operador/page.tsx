@@ -19,6 +19,8 @@ const getPedidosActivos = unstable_cache(
       status: p.status,
       clienteNombre: p.user.name || p.user.email || "Cliente",
       cantidadItems: p.items.length,
+      paymentMethod: p.paymentMethod,
+      paymentStatus: p.paymentStatus,
       updatedAt: p.updatedAt.toISOString(),
     }));
   },

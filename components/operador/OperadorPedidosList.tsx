@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { io } from "socket.io-client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ChevronRight, ShoppingBag } from "lucide-react";
+import { ChevronRight, ShoppingBag, Banknote, CreditCard } from "lucide-react";
 import { formatRelativeTime } from "@/lib/utils";
 import { OrderStatus } from "@prisma/client";
 import { cn } from "@/lib/utils";
@@ -22,6 +22,8 @@ interface PedidoRow {
   status: OrderStatus;
   clienteNombre: string;
   cantidadItems: number;
+  paymentMethod: "EFECTIVO" | "MERCADO_PAGO";
+  paymentStatus: "PENDIENTE" | "PAGADO" | "FALLIDO";
   updatedAt: string;
 }
 
@@ -106,9 +108,20 @@ export default function OperadorPedidosList({ pedidos: initialPedidos, misActivo
                         </Badge>
                       </div>
                       <p className="text-sm font-medium truncate">{pedido.clienteNombre}</p>
-                      <p className="text-xs text-[var(--muted-foreground)]">
-                        {pedido.cantidadItems} producto{pedido.cantidadItems !== 1 ? "s" : ""} · {formatRelativeTime(pedido.updatedAt)}
-                      </p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <p className="text-xs text-[var(--muted-foreground)]">
+                          {pedido.cantidadItems} producto{pedido.cantidadItems !== 1 ? "s" : ""} · {formatRelativeTime(pedido.updatedAt)}
+                        </p>
+                        {pedido.paymentMethod === "MERCADO_PAGO" && pedido.paymentStatus === "PAGADO" ? (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-green-100 text-green-700">
+                            <CreditCard className="h-2.5 w-2.5" /> MP · Pagado
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-gray-100 text-gray-600">
+                            <Banknote className="h-2.5 w-2.5" /> Efectivo
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <ChevronRight className="h-4 w-4 text-[var(--muted-foreground)] shrink-0" />
                   </CardContent>

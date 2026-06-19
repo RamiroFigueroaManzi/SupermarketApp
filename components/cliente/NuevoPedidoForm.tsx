@@ -138,7 +138,6 @@ export default function NuevoPedidoForm() {
     }
     setConfirming(true);
     try {
-      // Create order
       const orderRes = await fetch("/api/pedidos", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -149,17 +148,10 @@ export default function NuevoPedidoForm() {
       if (!orderRes.ok) throw new Error();
       const { pedido } = await orderRes.json();
 
-      // Confirm it
-      await fetch(`/api/pedidos/${pedido.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "RECIBIDO" }),
-      });
-
-      toast.success("¡Pedido confirmado!");
-      router.push(`/cliente/pedido/${pedido.id}`);
+      // Redirect to payment selection instead of confirming directly
+      router.push(`/cliente/pedido/${pedido.id}/pago`);
     } catch {
-      toast.error("Error al confirmar el pedido");
+      toast.error("Error al crear el pedido");
     } finally {
       setConfirming(false);
     }

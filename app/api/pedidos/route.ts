@@ -58,6 +58,8 @@ export async function GET(req: NextRequest) {
       totalAmount: p.totalAmount.toString(),
       clienteNombre: p.user.name || p.user.email,
       cantidadItems: p.items.length,
+      paymentMethod: p.paymentMethod,
+      paymentStatus: p.paymentStatus,
       createdAt: p.createdAt,
       updatedAt: p.updatedAt,
     }));
