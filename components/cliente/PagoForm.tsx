@@ -8,15 +8,40 @@ import { Banknote, CreditCard, Loader2, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { formatCurrency } from "@/lib/utils";
 
+interface Item {
+  productoId: string | null;
+  nombreDetectado: string;
+  productoNombre: string | null;
+  precio: string | null;
+  cantidad: number;
+  confianza: "alta" | "media" | "baja" | "no_encontrado";
+  categoria: string | null;
+  imageUrl: string | null;
+}
+
 interface Props {
   orderId: string;
   total: string;
   cantidadItems: number;
+  items: Item[];
 }
 
-export default function PagoForm({ orderId, total, cantidadItems }: Props) {
+export default function PagoForm({ orderId, total, cantidadItems, items }: Props) {
   const router = useRouter();
-  const [loading, setLoading] = useState<"efectivo" | "mp" | null>(null);
+  const [loading, setLoading] = useState<"efectivo" | "mp" | "volver" | null>(null);
+
+  const handleVolver = async () => {
+    setLoading("volver");
+    try {
+      // Delete the BORRADOR order
+      await fetch(`/api/pedidos/${orderId}`, { method: "DELETE" });
+      // Prefill the form with the original items
+      sessionStorage.setItem("pedido_prefill", JSON.stringify(items));
+    } catch {
+      // If delete fails, still go back — the BORRADOR will be cleaned up later
+    }
+    router.push("/cliente/pedido/nuevo");
+  };
 
   const handlePago = async (method: "EFECTIVO" | "MERCADO_PAGO") => {
     setLoading(method === "EFECTIVO" ? "efectivo" : "mp");
@@ -45,10 +70,15 @@ export default function PagoForm({ orderId, total, cantidadItems }: Props) {
     <div className="space-y-6">
       <div>
         <button
-          onClick={() => router.back()}
-          className="inline-flex items-center gap-1.5 text-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)] mb-4 transition-colors"
+          onClick={handleVolver}
+          disabled={!!loading}
+          className="inline-flex items-center gap-1.5 text-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)] mb-4 transition-colors disabled:opacity-50"
         >
-          <ArrowLeft className="h-4 w-4" />
+          {loading === "volver" ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <ArrowLeft className="h-4 w-4" />
+          )}
           Volver
         </button>
         <h1 className="text-xl font-semibold">Elegí cómo pagar</h1>
