@@ -15,6 +15,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "SuperMarket — Tu supermercado digital",
   description: "Realizá tus pedidos de supermercado con asistencia de IA",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "SuperMarket",
+  },
 };
 
 export default function RootLayout({
@@ -24,9 +29,14 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
+      lang="es"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
+      <head>
+        <meta name="theme-color" content="#16a34a" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <link rel="apple-touch-icon" href="/icon-192.png" />
+      </head>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );
