@@ -7,7 +7,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Banknote, CreditCard, Loader2, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { formatCurrency } from "@/lib/utils";
-import Link from "next/link";
 
 interface Props {
   orderId: string;
@@ -45,13 +44,13 @@ export default function PagoForm({ orderId, total, cantidadItems }: Props) {
   return (
     <div className="space-y-6">
       <div>
-        <Link
-          href="/cliente"
+        <button
+          onClick={() => router.back()}
           className="inline-flex items-center gap-1.5 text-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)] mb-4 transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
           Volver
-        </Link>
+        </button>
         <h1 className="text-xl font-semibold">Elegí cómo pagar</h1>
         <p className="text-sm text-[var(--muted-foreground)] mt-0.5">
           {cantidadItems} producto{cantidadItems !== 1 ? "s" : ""}
