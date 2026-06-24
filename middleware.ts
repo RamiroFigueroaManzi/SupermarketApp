@@ -18,7 +18,7 @@ export default auth((req) => {
   if (!matchedPrefix) return NextResponse.next();
 
   if (!session) {
-    return NextResponse.redirect(new URL("/", req.url));
+    return NextResponse.redirect(new URL("/login", req.url));
   }
 
   const allowedRoles = roleRoutes[matchedPrefix];
