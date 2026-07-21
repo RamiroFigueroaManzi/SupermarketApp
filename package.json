@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "cross-env NODE_OPTIONS=--max-old-space-size=4096 tsx server.ts",
     "dev:lite": "cross-env NODE_OPTIONS=--max-old-space-size=2048 next dev --no-turbopack",
-    "build": "next build --webpack",
+    "build": "next build --no-turbopack",
     "start": "node server.js",
     "start:local": "tsx server.ts",
     "lint": "eslint",
